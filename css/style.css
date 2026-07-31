@@ -699,23 +699,73 @@ body {
       "canvas"
       "toolbar"
       "sidebar";
-  }
-
-  .sidebar {
-    max-height: 300px;
+    height: 100dvh;
+    gap: 6px;
+    padding: 6px;
   }
 
   .game-header {
-    padding: 8px 12px;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .game-header .room-code {
+    font-size: 11px;
+    order: 1;
+  }
+
+  .game-header .room-code strong {
+    font-size: 14px;
+  }
+
+  .game-header .round-info {
     font-size: 12px;
+    order: 2;
+  }
+
+  .game-header .word-display {
+    font-size: 14px;
+    order: 3;
+    flex-basis: 100%;
+    text-align: center;
   }
 
   .game-header .timer {
     font-size: 22px;
+    order: 4;
+  }
+
+  .sidebar {
+    max-height: 35vh;
+    flex-shrink: 0;
+  }
+
+  .player-panel {
+    max-height: 100px;
   }
 
   .home-title {
     font-size: 28px;
+  }
+
+  .toolbar {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .toolbar-divider {
+    margin: 0 2px;
+  }
+
+  .color-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .size-btn {
+    width: 26px;
+    height: 26px;
   }
 }
 

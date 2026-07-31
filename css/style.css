@@ -359,6 +359,7 @@ body {
   cursor: crosshair;
   border-radius: 8px;
   background: white;
+  touch-action: none;  /* 阻止浏览器手势，确保触摸事件正常 */
 }
 
 .canvas-area.no-draw canvas {

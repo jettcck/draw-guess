@@ -775,12 +775,12 @@ async function initGame() {
   };
 
   // 退出按钮（游戏中 + 大厅中）
-  const doExit = async () => {
-    await leaveRoom();
+  async function doExit() {
+    try { await leaveRoom(); } catch (e) {}
     showScreen('screen-home');
-  };
-  document.getElementById('btn-exit-game').onclick = doExit;
-  document.getElementById('btn-exit-lobby').onclick = doExit;
+  }
+  document.getElementById('btn-exit-game').addEventListener('click', doExit);
+  document.getElementById('btn-exit-lobby').addEventListener('click', doExit);
 
   // 返回首页按钮
   document.getElementById('btn-back-home').onclick = async () => {

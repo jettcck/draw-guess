@@ -633,6 +633,7 @@ async function restoreSession() {
 }
 async function leaveRoom() {
   stopTimer();
+  if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
 
   // 取消所有订阅
   Object.values(G.channels).forEach(ch => {

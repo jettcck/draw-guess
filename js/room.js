@@ -221,6 +221,9 @@ async function enterGame() {
   const gameScreen = document.getElementById('screen-game');
   if (gameScreen.classList.contains('active')) return;
 
+  // 判断当前玩家是否是绘画者
+  G.isDrawer = (G.currentDrawerId === G.playerId);
+
   showScreen('screen-game');
   setupGameCanvas();
   initChat();

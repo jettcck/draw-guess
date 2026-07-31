@@ -26,14 +26,17 @@ async function createRoom(playerName) {
     attempts++;
   }
 
-  // 创建房间
+  // 创建房间（读取轮数设置）
+  const roundsEl = document.getElementById('input-rounds');
+  const maxRounds = roundsEl ? parseInt(roundsEl.value) || 3 : 3;
+
   const { data: room, error: roomError } = await gameDb
     .from('rooms')
     .insert({
       code: code,
       status: 'waiting',
       round: 1,
-      max_rounds: 3,
+      max_rounds: maxRounds,
       round_seconds: 60,
     })
     .select()

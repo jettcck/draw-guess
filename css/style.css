@@ -737,6 +737,13 @@ body {
     order: 4;
   }
 
+  .game-header .btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    order: 5;
+  }
+
   .sidebar {
     max-height: 35vh;
     flex-shrink: 0;

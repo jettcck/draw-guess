@@ -291,6 +291,11 @@ function handleRoomUpdate(room) {
   G.roundTime = room.round_seconds || 60;
   G.currentDrawerId = room.drawer_id;
 
+  if (room.status === 'waiting' && prevStatus !== 'waiting' && prevStatus !== '') {
+    // 从游戏结束回到大厅
+    handleBackToLobby();
+  }
+
   if (room.status === 'round_end' && prevStatus !== 'round_end') {
     handleRoundEnd();
   }
@@ -499,6 +504,20 @@ async function pickRandomWord() {
 
   if (!data || data.length === 0) return '苹果';
   return data[Math.floor(Math.random() * data.length)].word;
+}
+
+function handleBackToLobby() {
+  stopTimer();
+  hideModal('modal-gameover');
+  clearCanvasLocal();
+  G.isDrawer = false;
+  G.correctGuessers = new Set();
+  showScreen('screen-lobby');
+  document.getElementById('lobby-code').textContent = G.roomCode;
+  loadPlayers();
+  updatePlayerList();
+  startIdleTimer();
+  addSystemMessage('🔄 准备开始新一轮游戏！');
 }
 
 async function handleGameEnd() {
@@ -726,6 +745,21 @@ async function initGame() {
   document.getElementById('input-word').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitWord();
   });
+
+  // 再来一局按钮
+  document.getElementById('btn-stay-room').onclick = async () => {
+    hideModal('modal-gameover');
+    if (G.isHost) {
+      await gameDb.from('rooms').update({
+        status: 'waiting',
+        current_word: null,
+        drawer_id: null,
+        round: 1,
+      }).eq('id', G.roomId);
+      await gameDb.from('players').update({ score: 0 }).eq('room_id', G.roomId);
+    }
+    // 订阅会自动触发 handleBackToLobby
+  };
 
   // 返回首页按钮
   document.getElementById('btn-back-home').onclick = async () => {

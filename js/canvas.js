@@ -27,15 +27,15 @@ function initCanvas() {
   canvas.addEventListener('mouseup', endDrawing);
   canvas.addEventListener('mouseleave', endDrawing);
 
-  // 触摸事件（移动端）
+  // 触摸事件（移动端，传原始 Touch 对象，由 getNormalizedPos 统一处理）
   canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    startDrawing(getNormalizedPos(e.touches[0]));
+    startDrawing(e.touches[0]);
   }, { passive: false });
 
   canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
-    draw(getNormalizedPos(e.touches[0]));
+    draw(e.touches[0]);
   }, { passive: false });
 
   canvas.addEventListener('touchend', (e) => {

@@ -172,25 +172,28 @@ async function enterLobby() {
   }
 
   // 房主启动 3 分钟自动解散计时器
-  if (G.isHost) {
-    G._idleSeconds = 0;
-    G._idleInterval = setInterval(async () => {
-      G._idleSeconds++;
-      // 每 30 秒提醒一次
-      if (G._idleSeconds % 30 === 0 && G._idleSeconds < 180) {
-        const remain = Math.ceil((180 - G._idleSeconds) / 60);
-        addSystemMessage(`⏰ 房间将在 ${remain} 分钟后自动解散`);
-      }
-      if (G._idleSeconds >= 180 && G.gameStatus === 'waiting') {
-        clearInterval(G._idleInterval);
-        addSystemMessage('💤 房间超过 3 分钟无人开始，自动解散');
-        await gameDb.from('rooms').delete().eq('id', G.roomId);
-        await leaveRoom();
-        showScreen('screen-home');
-        showToast('房间已自动解散');
-      }
-    }, 1000);
-  }
+  startIdleTimer();
+}
+
+function startIdleTimer() {
+  if (!G.isHost) return;
+  if (G._idleInterval) clearInterval(G._idleInterval);
+  G._idleSeconds = 0;
+  G._idleInterval = setInterval(async () => {
+    G._idleSeconds++;
+    if (G._idleSeconds % 30 === 0 && G._idleSeconds < 180) {
+      const remain = Math.ceil((180 - G._idleSeconds) / 60);
+      addSystemMessage(`⏰ 房间将在 ${remain} 分钟后自动解散`);
+    }
+    if (G._idleSeconds >= 180 && G.gameStatus === 'waiting') {
+      clearInterval(G._idleInterval);
+      addSystemMessage('💤 房间超过 3 分钟无人开始，自动解散');
+      await gameDb.from('rooms').delete().eq('id', G.roomId);
+      await leaveRoom();
+      showScreen('screen-home');
+      showToast('房间已自动解散');
+    }
+  }, 1000);
 }
 
 // ============ 开始游戏 ============

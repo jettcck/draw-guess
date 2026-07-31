@@ -329,8 +329,21 @@ async function loadPlayers() {
     .eq('is_online', true);
 
   if (!error && data) {
+    const prevCount = G.players.length;
     G.players = data;
     updatePlayerList();
+
+    // 仅在有人离开后触发：之前 >=2 人，现在 <=1 人
+    if (prevCount >= 2 && data.length <= 1 && G.roomId && G.gameStatus !== 'ended') {
+      stopTimer();
+      if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
+      if (G.isHost) {
+        await gameDb.from('rooms').delete().eq('id', G.roomId);
+      }
+      clearSession();
+      showScreen('screen-home');
+      showToast('其他玩家已离开，房间已解散');
+    }
   }
 }
 
@@ -760,6 +773,14 @@ async function initGame() {
     }
     // 订阅会自动触发 handleBackToLobby
   };
+
+  // 退出按钮（游戏中 + 大厅中）
+  const doExit = async () => {
+    await leaveRoom();
+    showScreen('screen-home');
+  };
+  document.getElementById('btn-exit-game').onclick = doExit;
+  document.getElementById('btn-exit-lobby').onclick = doExit;
 
   // 返回首页按钮
   document.getElementById('btn-back-home').onclick = async () => {

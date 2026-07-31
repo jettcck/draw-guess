@@ -170,6 +170,27 @@ async function enterLobby() {
     enterGame();
     return;
   }
+
+  // 房主启动 3 分钟自动解散计时器
+  if (G.isHost) {
+    G._idleSeconds = 0;
+    G._idleInterval = setInterval(async () => {
+      G._idleSeconds++;
+      // 每 30 秒提醒一次
+      if (G._idleSeconds % 30 === 0 && G._idleSeconds < 180) {
+        const remain = Math.ceil((180 - G._idleSeconds) / 60);
+        addSystemMessage(`⏰ 房间将在 ${remain} 分钟后自动解散`);
+      }
+      if (G._idleSeconds >= 180 && G.gameStatus === 'waiting') {
+        clearInterval(G._idleInterval);
+        addSystemMessage('💤 房间超过 3 分钟无人开始，自动解散');
+        await gameDb.from('rooms').delete().eq('id', G.roomId);
+        await leaveRoom();
+        showScreen('screen-home');
+        showToast('房间已自动解散');
+      }
+    }, 1000);
+  }
 }
 
 // ============ 开始游戏 ============
@@ -178,6 +199,9 @@ async function startGame() {
     showToast('只有房主可以开始游戏');
     return;
   }
+
+  // 停止自动解散计时器
+  if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
 
   const onlinePlayers = G.players.filter(p => p.is_online);
   if (onlinePlayers.length < 2) {

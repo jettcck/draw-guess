@@ -28,6 +28,18 @@
           <input type="text" id="input-name" placeholder="输入昵称（最多10个字）" maxlength="10" autocomplete="off">
         </div>
 
+        <div class="input-group">
+          <label>🔄 游戏轮数</label>
+          <select id="input-rounds" style="width: 100%; padding: 12px 16px; background: var(--bg-input); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 16px; outline: none; font-family: inherit; cursor: pointer;">
+            <option value="1">1 轮</option>
+            <option value="2">2 轮</option>
+            <option value="3" selected>3 轮</option>
+            <option value="4">4 轮</option>
+            <option value="5">5 轮</option>
+            <option value="6">6 轮</option>
+          </select>
+        </div>
+
         <button class="btn btn-primary" id="btn-create">
           ✨ 创建新房间
         </button>

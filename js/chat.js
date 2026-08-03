@@ -133,7 +133,7 @@ function handleNewMessage(msg) {
   }
 }
 
-function addSystemMessage(content) {
+function addSystemMessage(content, opts = {}) {
   const container = document.getElementById('chat-messages');
   const msgEl = document.createElement('div');
   msgEl.className = 'chat-msg system';
@@ -141,8 +141,8 @@ function addSystemMessage(content) {
   container.appendChild(msgEl);
   container.scrollTop = container.scrollHeight;
 
-  // 也可以发送到服务器（让其他玩家看到）
-  if (G.roomId) {
+  // broadcast 为 false 时仅本地显示（用于所有客户端同时触发的消息，如提示）
+  if (opts.broadcast !== false && G.roomId) {
     gameDb.from('messages').insert({
       room_id: G.roomId,
       player_id: G.playerId,

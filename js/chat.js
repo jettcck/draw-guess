@@ -21,6 +21,8 @@ function initChat() {
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
+  // 禁止在轮次结束或游戏结束后猜词
+  if (G.gameStatus === 'round_end' || G.gameStatus === 'ended') { input.value = ''; return; }
   if (!content || !G.roomId || !G.playerId) return;
 
   // 检查是否是正确答案（且本轮还没猜对过）

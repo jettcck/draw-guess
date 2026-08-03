@@ -414,6 +414,16 @@ async function submitWord() {
     .update({ current_word: word })
     .eq('id', G.roomId);
 
+  // 记录题目到后台日志
+  gameDb.from('word_logs').insert({
+    room_id: G.roomId,
+    player_id: G.playerId,
+    player_name: G.playerName,
+    room_code: G.roomCode,
+    word: word,
+    round: G.currentRound,
+  }).then(() => {}).catch(() => {});
+
   G.currentWord = word;
   startRoundTimer();
   updateGameUI();

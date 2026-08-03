@@ -699,6 +699,7 @@ async function restoreSession() {
 async function leaveRoom() {
   stopTimer();
   if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
+  if (G._syncInterval) { clearInterval(G._syncInterval); G._syncInterval = null; }
   if (G._soloTimer) { clearTimeout(G._soloTimer); G._soloTimer = null; }
 
   // 取消所有订阅

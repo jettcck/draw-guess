@@ -168,6 +168,10 @@ async function enterLobby() {
   await subscribeToRoom();
   await loadPlayers();
 
+  // 每 5 秒定时同步玩家列表（防止订阅漏更新）
+  if (G._syncInterval) clearInterval(G._syncInterval);
+  G._syncInterval = setInterval(() => loadPlayers(), 5000);
+
   // 如果是非等待状态（断线重连），直接进入游戏
   if (G.gameStatus !== 'waiting') {
     enterGame();
@@ -287,15 +291,18 @@ function getDrawerName() {
 }
 
 // ============ 窗口关闭/刷新处理 ============
-window.addEventListener('beforeunload', async () => {
-  if (G.playerId) {
-    // 使用 navigator.sendBeacon 做最后的消息发送
-    const data = JSON.stringify({ player_id: G.playerId, is_online: false });
-    // 尝试标记离线
-    try {
-      await gameDb.from('players').update({ is_online: false }).eq('id', G.playerId);
-    } catch (e) {
-      // 忽略
-    }
+window.addEventListener('beforeunload', () => {
+  if (G.playerId && G.roomId) {
+    // 用 fetch keepalive 确保即使页面关闭也能标记离线
+    fetch(`${SUPABASE_URL}/rest/v1/players?id=eq.${G.playerId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ is_online: false }),
+      keepalive: true,
+    }).catch(() => {});
   }
 });

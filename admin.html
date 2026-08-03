@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理 - 你画我猜</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- ========== 登录页 ========== -->
+  <div id="login-screen" class="login-screen active">
+    <div class="login-card">
+      <div class="login-icon">🛡️</div>
+      <h1>后台管理</h1>
+      <p>你画我猜 · 管理系统</p>
+      <input type="password" id="admin-password" placeholder="请输入管理密码" autocomplete="off">
+      <button id="btn-login" class="btn-primary">登 录</button>
+      <p id="login-error" style="color:#e74c3c;display:none;margin-top:12px;">密码错误</p>
+    </div>
+  </div>
+
+  <!-- ========== 管理面板 ========== -->
+  <div id="dashboard" class="dashboard" style="display:none;">
+
+    <!-- 顶部导航 -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="logo-text">🛡️ 你画我猜 · 后台管理</span>
+      </div>
+      <div class="topbar-right">
+        <span id="current-time" class="time-text"></span>
+        <button id="btn-refresh" class="btn-sm" title="手动刷新">🔄 刷新</button>
+        <button id="btn-logout" class="btn-sm btn-outline">🚪 退出</button>
+      </div>
+    </header>
+
+    <!-- 标签导航 -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="overview">📊 概览</button>
+      <button class="tab" data-tab="wordlogs">📝 题目日志</button>
+      <button class="tab" data-tab="rooms">🏠 房间列表</button>
+    </nav>
+
+    <!-- 内容区 -->
+    <main class="content">
+
+      <!-- 概览 Tab -->
+      <section id="tab-overview" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-value" id="stat-rooms-today">-</div>
+            <div class="stat-label">今日房间</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value" id="stat-active-rooms">-</div>
+            <div class="stat-label">活跃房间</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="stat-players-today">-</div>
+            <div class="stat-label">今日玩家</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value" id="stat-words-today">-</div>
+            <div class="stat-label">今日题目数</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 题目日志 Tab -->
+      <section id="tab-wordlogs" class="tab-content">
+        <div class="table-toolbar">
+          <span>共 <strong id="wordlog-count">0</strong> 条记录</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:160px;">时间</th>
+                <th style="width:100px;">房间码</th>
+                <th style="width:120px;">画手</th>
+                <th>题目</th>
+                <th style="width:80px;">轮次</th>
+              </tr>
+            </thead>
+            <tbody id="wordlog-tbody">
+              <tr><td colspan="5" class="empty-cell">暂无记录</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 房间列表 Tab -->
+      <section id="tab-rooms" class="tab-content">
+        <div class="table-toolbar">
+          <span>共 <strong id="room-count">0</strong> 个房间</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:100px;">房间码</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:60px;">轮次</th>
+                <th style="width:80px;">在线/总数</th>
+                <th style="width:160px;">创建时间</th>
+              </tr>
+            </thead>
+            <tbody id="room-tbody">
+              <tr><td colspan="5" class="empty-cell">暂无房间</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Supabase SDK + Config -->
+  <script src="js/supabase-sdk.js"></script>
+  <script src="js/config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

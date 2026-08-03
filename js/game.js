@@ -22,6 +22,7 @@ const G = {
   roundTime: 60,
   timerSeconds: 60,
   timerInterval: null,
+  _roundTransitioning: false, // 防止重复触发轮次切换
 
   // 数据缓存
   players: [],
@@ -85,10 +86,12 @@ function showToast(message, duration = 2500) {
 function startTimer(seconds, onTick, onEnd) {
   clearInterval(G.timerInterval);
   G.timerSeconds = seconds;
+  G._roundTransitioning = false;
   const timerEl = document.getElementById('game-timer');
   if (timerEl) {
     timerEl.textContent = seconds;
     timerEl.className = 'timer';
+    timerEl.style.visibility = 'visible';
   }
 
   G.timerInterval = setInterval(() => {
@@ -138,6 +141,14 @@ function updateGameUI() {
   } else {
     wordEl.textContent = '????';
     wordEl.classList.add('hidden');
+  }
+
+  // 倒计时显示：等题目时隐藏
+  const timerEl = document.getElementById('game-timer');
+  if ((G.gameStatus === 'drawing' || G.gameStatus === 'guessing') && !G.currentWord && !G.isDrawer) {
+    timerEl.style.visibility = 'hidden';
+  } else {
+    timerEl.style.visibility = 'visible';
   }
 
   // 显示/隐藏工具栏
@@ -333,16 +344,27 @@ async function loadPlayers() {
     G.players = data;
     updatePlayerList();
 
-    // 仅在有人离开后触发：之前 >=2 人，现在 <=1 人
+    // 仅在有人离开后触发：之前 >=2 人，现在 <=1 人（延迟 5 秒防误判）
     if (prevCount >= 2 && data.length <= 1 && G.roomId && G.gameStatus !== 'ended') {
-      stopTimer();
-      if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
-      if (G.isHost) {
-        await gameDb.from('rooms').delete().eq('id', G.roomId);
-      }
-      clearSession();
-      showScreen('screen-home');
-      showToast('其他玩家已离开，房间已解散');
+      G._soloTimer = setTimeout(async () => {
+        // 二次确认：5 秒后仍然只有 1 人才解散
+        const { data: recheck } = await gameDb.from('players').select('id').eq('room_id', G.roomId).eq('is_online', true);
+        if (recheck && recheck.length <= 1) {
+          stopTimer();
+          if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
+          if (G.isHost) {
+            await gameDb.from('rooms').delete().eq('id', G.roomId);
+          }
+          clearSession();
+          showScreen('screen-home');
+          showToast('其他玩家已离开，房间已解散');
+        }
+      }, 5000);
+    }
+    // 如果玩家又回来了，取消解散
+    if (prevCount <= 1 && data.length >= 2 && G._soloTimer) {
+      clearTimeout(G._soloTimer);
+      G._soloTimer = null;
     }
   }
 }
@@ -464,6 +486,10 @@ async function handleRoundEnd() {
   updateGameUI();
   addSystemMessage(`第 ${G.currentRound} 轮结束！答案是「${G.currentWord}」`);
 
+  // 防止重复触发
+  if (G._roundTransitioning) return;
+  G._roundTransitioning = true;
+
   // 短暂等待后进入下一轮或结束
   setTimeout(async () => {
     if (G.isHost && G.currentRound >= G.maxRounds) {
@@ -476,6 +502,7 @@ async function handleRoundEnd() {
       addSystemMessage(`准备进入第 ${G.currentRound + 1} 轮...`);
       await advanceToNextRound();
     }
+    G._roundTransitioning = false;
   }, 2500);
 }
 
@@ -556,6 +583,12 @@ async function handleGameEnd() {
       ? `🎉 ${sorted[0].name} 获得了最高分！`
       : '游戏结束，感谢参与！';
 
+  // 非房主隐藏再来一局按钮
+  const stayBtn = document.getElementById('btn-stay-room');
+  if (stayBtn) {
+    stayBtn.style.display = G.isHost ? '' : 'none';
+    stayBtn.textContent = '🔄 再来一局';
+  }
   showModal('modal-gameover');
 }
 
@@ -666,6 +699,7 @@ async function restoreSession() {
 async function leaveRoom() {
   stopTimer();
   if (G._idleInterval) { clearInterval(G._idleInterval); G._idleInterval = null; }
+  if (G._soloTimer) { clearTimeout(G._soloTimer); G._soloTimer = null; }
 
   // 取消所有订阅
   Object.values(G.channels).forEach(ch => {
@@ -761,17 +795,18 @@ async function initGame() {
 
   // 再来一局按钮
   document.getElementById('btn-stay-room').onclick = async () => {
-    hideModal('modal-gameover');
-    if (G.isHost) {
-      await gameDb.from('rooms').update({
-        status: 'waiting',
-        current_word: null,
-        drawer_id: null,
-        round: 1,
-      }).eq('id', G.roomId);
-      await gameDb.from('players').update({ score: 0 }).eq('room_id', G.roomId);
+    if (!G.isHost) {
+      showToast('等待房主开始新一局...');
+      return;
     }
-    // 订阅会自动触发 handleBackToLobby
+    hideModal('modal-gameover');
+    await gameDb.from('rooms').update({
+      status: 'waiting',
+      current_word: null,
+      drawer_id: null,
+      round: 1,
+    }).eq('id', G.roomId);
+    await gameDb.from('players').update({ score: 0 }).eq('room_id', G.roomId);
   };
 
   // 退出按钮（游戏中 + 大厅中）

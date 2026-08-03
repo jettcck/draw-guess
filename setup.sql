@@ -172,3 +172,34 @@ INSERT INTO words (word, category) VALUES
 ('埃菲尔铁塔', '建筑'), ('自由女神像', '建筑'), ('比萨斜塔', '建筑'), ('大本钟', '建筑'),
 ('篮球明星', '运动'), ('足球门', '运动'), ('体操', '运动'), ('举重', '运动'),
 ('照镜子', '动作'), ('打喷嚏', '动作'), ('打哈欠', '动作'), ('伸懒腰', '动作');
+
+-- ============================================
+-- 6. 题目日志表（后台管理用，记录所有画手提交的题目）
+-- ============================================
+CREATE TABLE IF NOT EXISTS word_logs (
+  id BIGSERIAL PRIMARY KEY,
+  room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+  player_id UUID REFERENCES players(id) ON DELETE SET NULL,
+  player_name VARCHAR(20),
+  room_code VARCHAR(6),
+  word VARCHAR(50) NOT NULL,
+  round INT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE word_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read word_logs" ON word_logs;
+CREATE POLICY "Public read word_logs" ON word_logs FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public insert word_logs" ON word_logs;
+CREATE POLICY "Public insert word_logs" ON word_logs FOR INSERT WITH CHECK (true);
+
+-- Realtime
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'word_logs') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE word_logs;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_word_logs_room ON word_logs(room_id);
+CREATE INDEX IF NOT EXISTS idx_word_logs_created ON word_logs(created_at DESC);

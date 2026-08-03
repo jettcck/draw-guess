@@ -257,7 +257,7 @@ async function subscribeToRoom() {
     )
     .subscribe();
 
-  // 3. 订阅笔画（双通道：DB 持久化 + WebSocket 广播低延迟）
+  // 3. 订阅笔画（仅 WebSocket 广播；DB 只用于加载历史，不做实时监听避免双重回放）
   G.channels.strokes = gameDb
     .channel('room-strokes-' + G.roomId, {
       config: { broadcast: { self: false } }
@@ -270,13 +270,6 @@ async function subscribeToRoom() {
       // WebSocket 清屏广播
       handleNewStroke({ data: [{ x: -1, y: -1 }], color: '#CLEAR' });
     })
-    .on('postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'strokes', filter: `room_id=eq.${G.roomId}` },
-      (payload) => {
-        // DB 持久化同步（新玩家加入时用于加载历史笔画）
-        handleNewStroke(payload.new);
-      }
-    )
     .subscribe();
 
   // 4. 订阅消息
@@ -384,7 +377,9 @@ async function loadStrokes() {
 
 // ============ 游戏事件处理 ============
 function handleDrawingStart() {
-  G.isDrawer = (G.currentDrawerId === G.playerId);
+		if (G._drawingTransitioning) return;
+		G._drawingTransitioning = true;
+		G.isDrawer = (G.currentDrawerId === G.playerId);
   G.correctGuessers = new Set();
   stopTimer();
   clearCanvasLocal();
@@ -402,7 +397,8 @@ function handleDrawingStart() {
   // 猜词者等题目设置后才开始计时（由 onWordSet 触发）
 
   updateGameUI();
-  updatePlayerList();
+		updatePlayerList();
+		G._drawingTransitioning = false;
 }
 
 // 画手提交题目后调用
@@ -468,7 +464,7 @@ function startRoundTimer() {
     if (!hintShown && seconds <= G.roundTime - 10 && G.correctGuessers.size === 0 && G.currentWord) {
       hintShown = true;
       const len = G.currentWord.replace(/\s/g, '').length;
-      addSystemMessage(`💡 提示：这个词有 ${len} 个字`);
+      addSystemMessage(`💡 提示：这个词有 ${len} 个字`, { broadcast: false });
     }
   }, async () => {
     // 时间到
@@ -484,7 +480,7 @@ function startRoundTimer() {
 async function handleRoundEnd() {
   stopTimer();
   updateGameUI();
-  addSystemMessage(`第 ${G.currentRound} 轮结束！答案是「${G.currentWord}」`);
+  addSystemMessage(`第 ${G.currentRound} 轮结束！答案是「${G.currentWord}」`, { broadcast: false });
 
   // 防止重复触发
   if (G._roundTransitioning) return;
@@ -555,6 +551,8 @@ function handleBackToLobby() {
   showScreen('screen-lobby');
   document.getElementById('lobby-code').textContent = G.roomCode;
   loadPlayers();
+		if (G._syncInterval) clearInterval(G._syncInterval);
+		G._syncInterval = setInterval(() => loadPlayers(), 5000);
   updatePlayerList();
   startIdleTimer();
   addSystemMessage('🔄 准备开始新一轮游戏！');
@@ -658,6 +656,8 @@ async function restoreSession() {
     if (room.status === 'waiting') {
       showScreen('screen-lobby');
       document.getElementById('lobby-code').textContent = G.roomCode;
+      if (G._syncInterval) clearInterval(G._syncInterval);
+      G._syncInterval = setInterval(() => loadPlayers(), 5000);
       updatePlayerList();
     } else if (room.status === 'drawing' || room.status === 'guessing') {
       // 游戏中，加载笔画后进入

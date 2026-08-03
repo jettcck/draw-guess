@@ -55,14 +55,14 @@ body {
 
 #screen-game.active {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 240px;
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     "header header"
     "canvas sidebar"
     "toolbar sidebar";
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
   height: 100vh;
 }
 
@@ -452,8 +452,8 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
-  max-height: 200px;
+  padding: 10px;
+  max-height: 160px;
   overflow-y: auto;
 }
 
@@ -535,9 +535,9 @@ body {
 }
 
 .chat-msg {
-  font-size: 13px;
-  line-height: 1.4;
-  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 5px 8px;
   border-radius: 8px;
   max-width: 95%;
 }

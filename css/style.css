@@ -55,14 +55,14 @@ body {
 
 #screen-game.active {
   display: grid;
-  grid-template-columns: 1fr 240px;
+  grid-template-columns: 1fr 200px;
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     "header header"
     "canvas sidebar"
     "toolbar sidebar";
-  gap: 8px;
-  padding: 8px;
+  gap: 6px;
+  padding: 6px;
   height: 100vh;
 }
 
@@ -469,9 +469,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: 4px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .player-item:last-child { border-bottom: none; }

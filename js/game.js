@@ -409,10 +409,12 @@ async function submitWord() {
 
   hideWordInputModal();
 
-  await gameDb
+  const { error: updateError } = await gameDb
     .from('rooms')
     .update({ current_word: word })
     .eq('id', G.roomId);
+
+  if (updateError) { showToast('提交失败，请重试'); return; }
 
   // 记录题目到后台日志
   gameDb.from('word_logs').insert({
